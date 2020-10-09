@@ -3,4 +3,10 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return "<h1>Phishnet Archive</h1><p>This site is a prototype API for the Phishnet GameOfCode project.</p>"
+	with open("content/index.html") as f:
+    	return f.read()
+
+@app.route("/network")
+def network():
+	with open("content/network.html") as f:
+    	return f.read()
