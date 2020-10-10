@@ -1,4 +1,4 @@
-import email, imaplib, base64, threading, re, json
+import email, imaplib, base64, threading, re, json, urlextract
 from datetime import datetime, timezone
 from flask import request
 import dateutil.parser as dparser
@@ -28,7 +28,7 @@ def check_for_emails():
 	threading.Timer(10, check_for_emails).start()
 
 	mail = imaplib.IMAP4_SSL("imap.gmail.com")
-	mail.login("phishnetbot@gmail.com", "G0_ph15h!")
+	mail.login("phishnetbot@gmail.com", "passwd")
 	for folder in ["\"[Gmail]/Kaikki viestit\"", "\"[Gmail]/Roskaposti\""]:
 		res = mail.select(folder)
 
@@ -40,16 +40,10 @@ def check_for_emails():
 			mail_ids += block.split()
 
 		for i in mail_ids:
-			# Each value of i corresponds to one email here
-
 			status, data = mail.fetch(i, "(RFC822)")
 
 			for response_part in data:
 				if isinstance(response_part, tuple):
-					# len(response_part) is 3
-					# response_part[0] is some standard thingie (not interesting)
-					# response_part[1] contains the message headers and content (interesting, used below)
-					# response_part[2] is an ending byte, b")" (not interesting)
 
 					message = email.message_from_bytes(response_part[1])
 
@@ -71,9 +65,6 @@ def check_for_emails():
 					else:
 						mail_content = message.get_payload()
 
-					# So now we have the sender, subject and content (which can be searched for links)
-					# Attachments are still a mystery though
-
 					try:
 						mail_content = base64.b64decode(mail_content).decode("utf-8")
 					except:
@@ -91,10 +82,10 @@ def check_for_emails():
 					if sender_search:
 						mail_from = sender_search.group(0)
 
-					#links = urlextract.URLExtract().find_urls(mail_content)
+					links = urlextract.URLExtract().find_urls(mail_content)
 
-					#mailObject = {"reporter": mail_from_original, "subject": mail_subject, "links": links}
-					#add_message(mail_from, mailObject)
+					mailObject = {"reporter": mail_from_original, "subject": mail_subject, "links": links}
+					add_message(mail_from, mailObject)
 check_for_emails()
 
 @app.route("/")
@@ -109,14 +100,14 @@ def network():
 def db_dump():
 	return json.dumps(message_db)
 
-@app.route("/clear-db") # MUST be removed before final product
+@app.route("/clear-db") # MUST be removed in final product
 def clear_db():
 	global message_db
 	message_db = {}
 	write_db()
 	return "OK"
 
-@app.route("/report")
+@app.route("/report", methods=["POST"])
 def report():
 	email = request.args.get("email", default="", type=str)
 	add_message(email, {})

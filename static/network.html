@@ -136,8 +136,11 @@
 
 				for (var key in data) {
 					for (var i = 0; i < data[key].length; i++) {
-						console.log(data[key][i]);
-						messages.push({id: key + i, label: "Email", title: shorten(data[key][i]["subject"], 64), shape: "circle", data: data[key][i]});
+						if (Object.keys(data[key][i]).length == 0) {
+							messages.push({id: key + i, label: "Email", title: "[No subject] from " + key, shape: "circle", data: {}});
+						} else {
+							messages.push({id: key + i, label: "Email", title: shorten(data[key][i]["subject"], 64) + " from " + key, shape: "circle", data: data[key][i]});
+						}
 					}
 				}
 
@@ -152,7 +155,7 @@
 							if (k == "reporter") {
 								continue;
 							}
-							if (Array.isArray(aAttr[k])) {
+							if (Array.isArray(aAttr[k]) && Array.isArray(bAttr[k])) {
 								for (var l = 0; l < aAttr[k].length; l++) {
 									for (var m = 0; m < bAttr[k].length; m++) {
 										if (aAttr[k][l] == bAttr[k][m]) {
@@ -185,8 +188,6 @@
 			    var options = {};
 
 			    var network = new vis.Network(container, data, options);
-			}).catch(function(err) {
-				// TODO: error handling
 			});
 		</script>
 
