@@ -94,7 +94,7 @@ def check_for_emails():
 
 					links = urlextract.URLExtract().find_urls(mail_content)
 
-					mailObject = {"reporter": mail_from_original, "subject": mail_subject, "links": links}
+					mailObject = {"reporter": mail_from_original, "time": mail_time, "subject": mail_subject, "links": links}
 					add_message(mail_from, mailObject)
 check_for_emails()
 
@@ -119,6 +119,6 @@ def clear_db():
 
 @app.route("/report")
 def report():
-	email = request.args.get('email', default = "", type = str)
+	email = request.args.get("email", default="", type=str)
 	add_message(email, {})
 	return "OK"
