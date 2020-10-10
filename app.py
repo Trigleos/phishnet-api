@@ -1,5 +1,6 @@
 import email, imaplib, base64, threading, re, json, urlextract
 from datetime import datetime, timezone
+from flask import request
 import dateutil.parser as dparser
 
 from flask import Flask
