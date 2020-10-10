@@ -39,7 +39,8 @@ def check_for_emails():
 		for block in data:
 			mail_ids += block.split()
 
-		print(str(len(mail_ids)) + " new emails")
+		if len(mail_ids) > 0:
+			print(str(len(mail_ids)) + " new emails")
 
 		for i in mail_ids:
 			status, data = mail.fetch(i, "(RFC822)")
@@ -127,5 +128,18 @@ def clear_db():
 @app.route("/report", methods=["POST"])
 def report():
 	email = request.args.get("email", default="", type=str)
-	add_message(email, {})
+	add_message(email, {"time": datetime.now().astimezone().strftime("%d/%m/%y %H %p")})
 	return "OK"
+
+@app.route("/query")
+def query():
+	email = request.args.get("email", default="", type=str)
+	count = 0
+	last = "never"
+	if email in message_db:
+		count = len(message_db[email])
+		if "time" in message_db[email][-1]:
+			last = message_db[email][-1]["time"]
+		else:
+			last = "unknown"
+	return "{\"count\": " + str(count) + ", \"last\": \"" + last + "\"}"

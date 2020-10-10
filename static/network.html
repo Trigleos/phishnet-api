@@ -151,7 +151,6 @@
 							if (excludedProperties.has(k)) {
 								continue;
 							}
-							console.log(aAttr[k], bAttr[k]);
 							if (Array.isArray(aAttr[k]) && Array.isArray(bAttr[k])) {
 								for (var l = 0; l < aAttr[k].length; l++) {
 									for (var m = 0; m < bAttr[k].length; m++) {
@@ -160,7 +159,7 @@
 										}
 									}
 								}
-							} else if (aAttr[k] == bAttr[k]) {
+							} else if (bAttr[k] != null && aAttr[k].trim() == bAttr[k].trim()) {
 								connections.push({from: messages[i].id, to: messages[j].id, label: k, title: aAttr[k]});
 							}
 						}
@@ -182,7 +181,7 @@
 
 					for (var key in data) {
 						for (var i = 0; i < data[key].length; i++) {
-							if (Object.keys(data[key][i]).length == 0) {
+							if (data[key][i]["subject"] == null) {
 								messages.push({id: key + i, label: "Email", title: "[No subject]<br>Sender: " + key, shape: "box", data: {}});
 							} else {
 								messages.push({id: key + i, label: "Email", title: shorten(data[key][i]["subject"], 64) + "<br>From: " + key + "<br>Time: " + data[key][i]["time"], shape: "box", data: data[key][i]});
