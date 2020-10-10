@@ -54,7 +54,7 @@
 	    	}
 
 	    	.controlheader {
-	    		font-size: 22px;
+	    		font-size: 18px;
 	    	}
 
 	    	.navbar-logo {
@@ -110,14 +110,19 @@
 					<label for="visibilitycontrols" class="controlheader">Show common...</label>
 					<div class="custom-control custom-switch">
 						<input class="custom-control-input" type="checkbox" id="graphcontrol-sender" checked>
-						<label class="custom-control-label" for="inlineCheckbox1">Sender</label>&nbsp;&nbsp;
+						<label class="custom-control-label">Sender</label>&nbsp;&nbsp;
 						<input class="custom-control-input" type="checkbox" id="graphcontrol-subject" checked>
-						<label class="custom-control-label" for="inlineCheckbox2">Subject</label>&nbsp;&nbsp;
+						<label class="custom-control-label">Subject</label><br>
 						<input class="custom-control-input" type="checkbox" id="graphcontrol-links" checked>
-						<label class="custom-control-label" for="inlineCheckbox3">Links</label>
+						<label class="custom-control-label">Links</label>&nbsp;&nbsp;
+						<input class="custom-control-input" type="checkbox" id="graphcontrol-time" checked>
+						<label class="custom-control-label">Time</label><br>
+						<input class="custom-control-input" type="checkbox" id="graphcontrol-reporter" checked>
+						<label class="custom-control-label">Reporter</label>
 					</div>
 				</fieldset>
 			</form>
+			<p id="graphinfo"></p>
 		</div>
 
 		<script type="text/javascript">
@@ -128,43 +133,35 @@
 				return t;
 			}
 
-		    fetch("db-dump").then(function(response) {
-				return response.json();
-			}).then(function(data) {
-				var messages = [];
-				var connections = [];
+			var excludedProperties = new Set();
+			var messages = [];
+			var connections = [];
+			var edges = null;
 
-				for (var key in data) {
-					for (var i = 0; i < data[key].length; i++) {
-						if (Object.keys(data[key][i]).length == 0) {
-							messages.push({id: key + i, label: "Email", title: "[No subject] from " + key, shape: "circle", data: {}});
-						} else {
-							messages.push({id: key + i, label: "Email", title: shorten(data[key][i]["subject"], 64) + " from " + key, shape: "circle", data: data[key][i]});
-						}
-					}
-				}
-
+			function computeConnections() {
+				connections = [];
 				for (var i = 0; i < messages.length; i++) {
 					for (var j = i + 1; j < messages.length; j++) {
-						if (messages[i].id.substring(0, messages[i].id.length - 1) == messages[j].id.substring(0, messages[j].id.length - 1)) {
-							connections.push({from: messages[i].id, to: messages[j].id, label: "Common sender", title: messages[i].id.substring(0, messages[i].id.length - 1)});
+						if (!excludedProperties.has("sender") && messages[i].id.substring(0, messages[i].id.length - 1) == messages[j].id.substring(0, messages[j].id.length - 1)) {
+							connections.push({from: messages[i].id, to: messages[j].id, label: "sender", title: messages[i].id.substring(0, messages[i].id.length - 1)});
 						}
 						var aAttr = messages[i].data;
 						var bAttr = messages[j].data;
 						for (var k in aAttr) {
-							if (k == "reporter") {
+							if (excludedProperties.has(k)) {
 								continue;
 							}
+							console.log(aAttr[k], bAttr[k]);
 							if (Array.isArray(aAttr[k]) && Array.isArray(bAttr[k])) {
 								for (var l = 0; l < aAttr[k].length; l++) {
 									for (var m = 0; m < bAttr[k].length; m++) {
 										if (aAttr[k][l] == bAttr[k][m]) {
-											connections.push({from: messages[i].id, to: messages[j].id, label: "Common " + k, title: aAttr[k][l]});
+											connections.push({from: messages[i].id, to: messages[j].id, label: k, title: aAttr[k][l]});
 										}
 									}
 								}
 							} else if (aAttr[k] == bAttr[k]) {
-								connections.push({from: messages[i].id, to: messages[j].id, label: "Common " + k, title: aAttr[k]});
+								connections.push({from: messages[i].id, to: messages[j].id, label: k, title: aAttr[k]});
 							}
 						}
 					}
@@ -174,21 +171,64 @@
 					connections[i].smooth = {type: "dynamic"};
 					connections[i].length = 200;
 				}
+			}
 
-				var nodes = new vis.DataSet(messages);
+			function drawNetwork() {
+				fetch("db-dump").then(function(response) {
+					return response.json();
+				}).then(function(data) {
+					messages = [];
+					connections = [];
 
-			    var edges = new vis.DataSet(connections);
+					for (var key in data) {
+						for (var i = 0; i < data[key].length; i++) {
+							if (Object.keys(data[key][i]).length == 0) {
+								messages.push({id: key + i, label: "Email", title: "[No subject]<br>Sender: " + key, shape: "box", data: {}});
+							} else {
+								messages.push({id: key + i, label: "Email", title: shorten(data[key][i]["subject"], 64) + "<br>From: " + key + "<br>Time: " + data[key][i]["time"], shape: "box", data: data[key][i]});
+							}
+						}
+					}
 
-			    var container = document.getElementById("network");
+					computeConnections();
 
-			    var data = {
-			        nodes: nodes,
-			        edges: edges
-			    };
-			    var options = {};
+					var nodes = new vis.DataSet(messages);
 
-			    var network = new vis.Network(container, data, options);
-			});
+				    edges = new vis.DataSet(connections);
+
+				    var container = document.getElementById("network");
+
+				    var data = {
+				        nodes: nodes,
+				        edges: edges
+				    };
+				    var options = {};
+
+				    network = new vis.Network(container, data, options);
+
+				    document.getElementById("graphinfo").innerHTML = "Showing " + messages.length + " messages with a total of " + connections.length + " connections.";
+				});
+			}
+
+			drawNetwork();
+
+			var properties = ["sender", "subject", "links", "time", "reporter"];
+			for (var i = 0; i < properties.length; i++) {
+				var e = document.getElementById("graphcontrol-" + properties[i]);
+				e.setAttribute("control-target", properties[i]);
+				e.onchange = function() {
+					if (!this.checked) {
+						excludedProperties.add(this.getAttribute("control-target"));
+					} else {
+						excludedProperties.delete(this.getAttribute("control-target"));
+					}
+					computeConnections();
+					edges.clear();
+					edges.add(connections);
+
+				    document.getElementById("graphinfo").innerHTML = "Showing " + messages.length + " messages with a total of " + connections.length + " connections.";
+				};
+			}
 		</script>
 
 

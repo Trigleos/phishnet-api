@@ -42,7 +42,12 @@
 			    margin: 5px;
 			}
 
-			.loader {
+			#statusbox {
+				margin-top: 20px;
+				text-align: center;
+			}
+
+			#loadingicon {
 				background-image: url("favicon.png");
 				background-repeat: no-repeat;
 				background-size: 100% 100%;
@@ -50,6 +55,8 @@
 				width: 120px;
 				height: 120px;
 				animation: spin 1s ease infinite;
+				display: none;
+				margin-left: calc(50% - 60px);
 			}
 
 			@keyframes spin {
@@ -86,12 +93,12 @@
 
 		<div class="container d-flex" style="width: 500px">
 			<div class="row text-center">
-				<h1 style="font-size: 48px">Report or search...</h1>
+				<h1 style="font-size: 48px">Report or search</h1>
 			</div>
 			<br>
 			<div class="row">
 				<div class="input-group input-group-lg">
-					<input type="text" class="form-control" id="sender-addr" placeholder="Enter address/number...">
+					<input type="text" class="form-control" id="sender-addr" placeholder="Enter address/number">
 					<span class="input-group-btn">
 						<button class="btn btn-primary" type="button" id="report">Report</button>
 						<button class="btn btn-primary" type="button" id="search">Search</button>
@@ -99,23 +106,56 @@
 				</div>
 			</div>
 			<div class="row" id="statusbox">
-				<!--<div class="loader"></div>-->
+				<p id="statustext"></p>
+				<div id="loadingicon"></div>
 			</div>
 		</div>
 
 		<script>
+			function validateEmail(email) {
+			    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+			    return re.test(String(email).toLowerCase());
+			}
+
 			function search() {
-				alert("asdasd");
+				var addr = document.getElementById("sender-addr").value;
+				if (addr == "" || !validateEmail(addr)) {
+					document.getElementById("statustext").innerHTML = "Please enter a valid email address.";
+					return;
+				}
+
+				document.getElementById("loadingicon").style.display = "block";
+			}
+
+			document.getElementById("sender-addr").onkeyup = function() {
+				var addr = document.getElementById("sender-addr").value;
+				if (addr == "" || !validateEmail(addr)) {
+					document.getElementById("report").classList.add("disabled");
+					document.getElementById("search").classList.add("disabled");
+				} else {
+					document.getElementById("report").classList.remove("disabled");
+					document.getElementById("search").classList.remove("disabled");
+				}
 			}
 
 			document.getElementById("report").onclick = function() {
-				var addr = document.getElementById("sender-addr").value;
+				if (document.getElementById("report").classList.contains("disabled")) {
+					return;
+				}
+
+				document.getElementById("loadingicon").style.display = "block";
 				fetch("/report?email=" + addr, {
 				    method: "POST"
 				}).then(search);
 			};
 
-			document.getElementById("search").onclick = search;
+			document.getElementById("search").onclick = function() {
+				if (document.getElementById("search").classList.contains("disabled")) {
+					return;
+				}
+
+				search();
+			};
 		</script>
   	</body>
 </html>
