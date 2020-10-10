@@ -116,3 +116,8 @@ def clear_db():
 	write_db()
 	return "OK"
 
+@app.route("/report")
+def report():
+	email = request.args.get('email', default = "", type = str)
+	add_message(email, {})
+	return "OK"
