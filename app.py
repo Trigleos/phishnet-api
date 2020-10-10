@@ -29,7 +29,6 @@ def check_for_emails():
 
 	mail = imaplib.IMAP4_SSL("imap.gmail.com")
 	mail.login("phishnetbot@gmail.com", "G0_ph15h!")
-
 	for folder in ["\"[Gmail]/Kaikki viestit\"", "\"[Gmail]/Roskaposti\""]:
 		res = mail.select(folder)
 
