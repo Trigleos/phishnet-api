@@ -115,7 +115,7 @@ def check_for_emails():
 					links = list(set(links))
 
 					for i in range(len(links) - 1, 0, -1):
-						if len(links[i]) == 0:
+						if links[i] is None or len(links[i]) == 0:
 							del links[i]
 
 					mailObject = {"reporter": mail_from_original, "subject": mail_subject, "links": links, "time": mail_time}
