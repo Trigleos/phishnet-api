@@ -117,9 +117,7 @@
 						<input class="custom-control-input" type="checkbox" id="graphcontrol-links" checked>
 						<label class="custom-control-label">Links</label>&nbsp;&nbsp;
 						<input class="custom-control-input" type="checkbox" id="graphcontrol-time" checked>
-						<label class="custom-control-label">Time</label><br>
-						<input class="custom-control-input" type="checkbox" id="graphcontrol-reporter" checked>
-						<label class="custom-control-label">Reporter</label>
+						<label class="custom-control-label">Time</label>
 					</div>
 				</fieldset>
 			</form>
@@ -135,6 +133,7 @@
 			}
 
 			var excludedProperties = new Set();
+			excludedProperties.add("reporter");
 			var messages = [];
 			var connections = [];
 			var edges = null;
@@ -212,7 +211,7 @@
 
 			drawNetwork();
 
-			var properties = ["sender", "subject", "links", "time", "reporter"];
+			var properties = ["sender", "subject", "links", "time"];
 			for (var i = 0; i < properties.length; i++) {
 				var e = document.getElementById("graphcontrol-" + properties[i]);
 				e.setAttribute("control-target", properties[i]);
