@@ -28,7 +28,7 @@ def check_for_emails():
 	threading.Timer(10, check_for_emails).start()
 
 	mail = imaplib.IMAP4_SSL("imap.gmail.com")
-	mail.login("phishnetbot@gmail.com", "passwd")
+	mail.login("phishnetbot@gmail.com", open("password.txt", "r").read().strip())
 	for folder in ["\"[Gmail]/Kaikki viestit\"", "\"[Gmail]/Roskaposti\""]:
 		res = mail.select(folder)
 
@@ -38,6 +38,8 @@ def check_for_emails():
 
 		for block in data:
 			mail_ids += block.split()
+
+		print(str(len(mail_ids)) + " new emails")
 
 		for i in mail_ids:
 			status, data = mail.fetch(i, "(RFC822)")
@@ -60,15 +62,21 @@ def check_for_emails():
 						mail_content = ""
 
 						for part in message.get_payload():
-							if part.get_content_type() == "text/plain":
-								mail_content += part.get_payload()
+							if part.get_content_type() in ["text/plain", "text/html", "multipart/alternative"]:
+								if type(part.get_payload()) == list:
+									for m in part.get_payload():
+										tmp = m.as_string()
+										tmp = tmp.split("\n\n", 1)[1]
+										try:
+											tmp = base64.b64decode(tmp).decode("utf-8")
+										except:
+											pass
+										mail_content += tmp
+										break
+								else:
+									mail_content += part.get_payload()
 					else:
 						mail_content = message.get_payload()
-
-					try:
-						mail_content = base64.b64decode(mail_content).decode("utf-8")
-					except:
-						pass
 
 					mail_from = mail_from_original
 					if "Subject: " in mail_content or "From: " in mail_content:
@@ -77,6 +85,15 @@ def check_for_emails():
 								mail_subject = l[len("Subject: "):]
 							if l.startswith("From: "):
 								mail_from = l[len("From: "):]
+							if l.startswith("Von: "):
+								mail_from = l[len("Von: "):]
+
+					mail_subject = mail_subject.lower()
+					while mail_subject.startswith("fw: ") or mail_subject.startswith("fwd: "):
+						if mail_subject.startswith("fw: "):
+							mail_subject = mail_subject[4:]
+						if mail_subject.startswith("fwd: "):
+							mail_subject = mail_subject[5:]
 
 					sender_search = re.search(r"[\w\.-]+@[\w\.-]+\.\w+", mail_from)
 					if sender_search:
@@ -84,7 +101,7 @@ def check_for_emails():
 
 					links = urlextract.URLExtract().find_urls(mail_content)
 
-					mailObject = {"reporter": mail_from_original, "subject": mail_subject, "links": links}
+					mailObject = {"reporter": mail_from_original, "subject": mail_subject, "links": links, "time": mail_time}
 					add_message(mail_from, mailObject)
 check_for_emails()
 
