@@ -114,6 +114,10 @@ def index():
 def network():
 	return app.send_static_file("network.html")
 
+@app.route("/learn")
+def learn():
+	return app.send_static_file("educate.html")
+
 @app.route("/db-dump")
 def db_dump():
 	return json.dumps(message_db)
