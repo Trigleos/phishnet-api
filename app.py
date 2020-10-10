@@ -1,4 +1,4 @@
-import email, imaplib, base64, threading, re, json, urlextract
+import email, imaplib, base64, threading, re, json
 from datetime import datetime, timezone
 from flask import request
 import dateutil.parser as dparser
@@ -91,10 +91,10 @@ def check_for_emails():
 					if sender_search:
 						mail_from = sender_search.group(0)
 
-					links = urlextract.URLExtract().find_urls(mail_content)
+					#links = urlextract.URLExtract().find_urls(mail_content)
 
-					mailObject = {"reporter": mail_from_original, "subject": mail_subject, "links": links}
-					add_message(mail_from, mailObject)
+					#mailObject = {"reporter": mail_from_original, "subject": mail_subject, "links": links}
+					#add_message(mail_from, mailObject)
 check_for_emails()
 
 @app.route("/")
