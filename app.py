@@ -1,6 +1,7 @@
 import email, imaplib, base64, threading, re, json, urlextract
 from datetime import datetime, timezone
 from flask import request
+from urllib.parse import urlparse
 import dateutil.parser as dparser
 
 from flask import Flask
@@ -68,6 +69,7 @@ def check_for_emails():
 									for m in part.get_payload():
 										tmp = m.as_string()
 										tmp = tmp.split("\n\n", 1)[1]
+
 										try:
 											tmp = base64.b64decode(tmp).decode("utf-8")
 										except:
@@ -78,6 +80,11 @@ def check_for_emails():
 									mail_content += part.get_payload()
 					else:
 						mail_content = message.get_payload()
+
+					try:
+						mail_content = base64.b64decode(mail_content).decode("utf-8")
+					except:
+						pass
 
 					mail_from = mail_from_original
 					if "Subject: " in mail_content or "From: " in mail_content:
@@ -101,6 +108,11 @@ def check_for_emails():
 						mail_from = sender_search.group(0)
 
 					links = urlextract.URLExtract().find_urls(mail_content)
+
+					for i in range(len(links)):
+						links[i] = urlparse(links[i]).hostname
+
+					links = list(set(links))
 
 					mailObject = {"reporter": mail_from_original, "subject": mail_subject, "links": links, "time": mail_time}
 					add_message(mail_from, mailObject)
