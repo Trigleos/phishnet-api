@@ -183,7 +183,7 @@
 				</div>
 			</div><br>
 			<div class="row text-center">
-				<p>You can also forward your phishy emails to <code>phishnetbot@gmail.com</code>!</p>
+				<p>You can also forward your phishy emails to <code>phishnetbot@gmail.com</code></p>
 			</div>
 			<div class="row" id="statusbox">
 				<p id="statustext"></p>
@@ -197,29 +197,29 @@
 						<th scope="col">Number of reports</th>
 					</tr>
 				</thead>
-				<tbody>
+				<tbody id="scoreboard">
 					<tr>
-						<th scope="row">1</th>
+						<th>1</th>
 						<td>paypaI@gmail.com</td>
 						<td>4234</td>
 					</tr>
 					<tr>
-						<th scope="row">2</th>
+						<th>2</th>
 						<td>support@microsoft-offical.com</td>
 						<td>1211</td>
 					</tr>
 					<tr>
-						<th scope="row">3</th>
+						<th>3</th>
 						<td>zoom-8v3z9j3f6d@outlook.com</td>
 						<td>123</td>
 					</tr>
 					<tr>
-						<th scope="row">4</th>
+						<th>4</th>
 						<td>apple@support-company-00.com</td>
 						<td>69</td>
 					</tr>
 					<tr>
-						<th scope="row">5</th>
+						<th>5</th>
 						<td>mircosoft@outlook.com</td>
 						<td>20</td>
 					</tr>
@@ -290,6 +290,31 @@
 				document.getElementById("queryresults").classList.add("hidden");
 				document.getElementById("queryresults").classList.remove("visible");
 			}
+
+			window.addEventListener("load", function() {
+				fetch("db-dump").then(function(response) {
+					return response.json();
+				}).then(function(data) {
+					var props = [];
+					for (var k in data) {
+						props.push({id: k, data: data[k]});
+					}
+					props.sort(function(x, y) {
+						return y.data.length - x.data.length;
+					});
+					var tab = document.getElementById("scoreboard");
+					while (tab.children.length > 0) {
+						tab.removeChild(tab.children[0]);
+					}
+					for (var i = 0; i < Math.min(props.length, 5); i++) {
+						var r = document.createElement("tr");
+						r.innerHTML = "<th>" + (i + 1) + "</th>" +
+									  "<td>" + props[i].id + "</td>" +
+									  "<td>" + props[i].data.length + "</td>";
+						tab.appendChild(r);
+					}
+				});
+			});
 		</script>
   	</body>
 </html>
